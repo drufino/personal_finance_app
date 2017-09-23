@@ -1,0 +1,19 @@
+{
+    "compilerOptions" : {
+        "target" : "es5",
+        "sourceMap" : true,
+        "jsx" :"react",
+        "strict": true,
+        "strictNullChecks" : true,
+        "types" : [ "node" ],
+        "lib" : ["es5", "es2015.core", "dom"],
+        "experimentalDecorators" : true
+    },
+    "include" : [
+        "src/**/*",
+        "server/**/*"
+    ],
+    "exclude" : [
+        "node_modules"
+    ]
+}
