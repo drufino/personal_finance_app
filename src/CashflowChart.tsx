@@ -93,6 +93,7 @@ export class CashflowCategory extends React.Component<CashflowProps, {}>
     }
 }
 
+// This is a bar chart summary of expenses, on a monthly basis
 @observer
 export class CashflowSummary extends React.Component<CashflowProps, {}>
 {
@@ -126,6 +127,13 @@ export class CashflowSummary extends React.Component<CashflowProps, {}>
         }
 
         per_month.sort((x,y) => ((x.year == y.year) ? x.month < y.month : x.year < y.year) ? -1 : 1);
+
+        // Only include the last 12-months
+        // otherwise we end up having two 'May's in the chart
+        if (per_month.length > 12)
+        {
+            per_month = per_month.slice(per_month.length - 12,per_month.length);
+        }
 
         let x = 
         per_month.map((x) => `${QIF.month_names_short[x.month]}`);
