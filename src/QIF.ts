@@ -165,13 +165,15 @@ export function parse_csv(csv_text : string) : QIFTransactionDetails[] | string 
 {
     var lines = splitEasy(csv_text)
     var amount_idx = lines[0].findIndex((x : string) => x.toLowerCase() == 'amount');
-    if (amount_idx == -1) { 
-        amount_idx = 2;
-    }
+
 
     var total_details : QIFTransactionDetails[] = [];
     var transaction_number = 1;
     var line_number = 1;
+    if (amount_idx == -1) { 
+        amount_idx = 2;
+        line_number = 0;
+    }
     try {
         for (; line_number < lines.length; ++line_number)
         {
