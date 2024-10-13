@@ -2,4 +2,3 @@ node_modules
 package-log.json
 package-lock.json
 dist
-public

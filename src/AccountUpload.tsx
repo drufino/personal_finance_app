@@ -25,7 +25,7 @@ function read_file(files : FileList | null, callBack : (data: string) => void)
 @observer
 export class ImportData extends React.Component<{open : boolean, onClose : (data : string) => void},{}>
 {
-    @observable data = '';
+    @observable accessor data = '';
 
     onClose = (event: React.MouseEvent<HTMLElement>, data: ModalProps) => {
         this.props.onClose(this.data);
@@ -68,15 +68,29 @@ type AccountUploadProps = {
 @observer
 export class AccountUpload extends React.Component<AccountUploadProps, AccountUploadState>
 {
-    @observable data = '';
-    @observable date_format : QIF.DateFormat = 'Unknown';
+    @observable accessor data = '';
+    @observable accessor date_format : QIF.DateFormat = 'Unknown';
     transactions_table_ref : QIFTransactionsTable | null = null;
+    @observable accessor flip : boolean = false;
 
     @computed get transactions() {
         if (!this.data || this.data == '')
             return null;
         else
-            return QIF.parse(this.data);
+        {
+            let transactions = QIF.parse_csv(this.data);
+            if (transactions) {
+                transactions = (transactions as QIFTransactionDetails[]).map((details : QIFTransactionDetails) => { return {
+                    date:details.date,
+                    amount:this.flip ? -details.amount : details.amount,
+                    who:details.who,
+                    address:details.address,
+                    number:details.number
+                    }
+                });
+            }
+            return transactions;
+        }
     }
 
     valid_formats() {
@@ -185,6 +199,7 @@ export class AccountUpload extends React.Component<AccountUploadProps, AccountUp
         }
 
         let dropdown_options = this.valid_formats().map((x) => ({ text : x, value : x }));
+        let dropdown_options2 = ['Unflipped','Flipped'].map((x) => ({ text : x, value : x }));
 
         return (
             <Modal open={this.props.open} closeOnEscape={false} closeOnDimmerClick={false} onClose={(ev,data) => { this.onClose(false); this.setState({filename:''}) }}>
@@ -198,6 +213,9 @@ export class AccountUpload extends React.Component<AccountUploadProps, AccountUp
                     </Grid.Column>
                     <Grid.Column>
                     <Dropdown value={this.date_format} options={dropdown_options} onChange={(e,data) => {this.date_format = (data.value as QIF.DateFormat);}} />
+                    </Grid.Column> 
+                    <Grid.Column>
+                    <Dropdown value={this.flip ? 'Flipped' : 'Unflipped'} options={dropdown_options2} onChange={(e,data) => {this.flip = ((data.value as string) == 'Flipped');}} />
                     </Grid.Column>  
                     </Grid>
                     <Divider/>

@@ -5,7 +5,7 @@ import { observer } from 'mobx-react';
 import * as AccountData from './AccountData';
 import { account_store, SummaryView } from './AccountData';
 import ReactDatePicker from 'react-datepicker';
-import { ReactDatePickerProps } from 'react-datepicker';
+import { DatePickerProps } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import * as QIF from './QIF';
 import * as moment from 'moment';
@@ -255,7 +255,7 @@ export class CashflowChart extends React.Component<CashflowProps,{}>
 @observer
 export class Cashflow extends React.Component<{}, {}>
 {
-    @observable start_date : moment.Moment | null;
+    @observable accessor start_date : moment.Moment | null;
 
     constructor()
     {
@@ -292,13 +292,14 @@ export class Cashflow extends React.Component<{}, {}>
         let income_categories = summary_view.income_categories;
         let cash_only = summary_view.cash_only;
 
-        let start_date_props : ReactDatePickerProps = {
-            selected : start_date,
+        let start_date_props : DatePickerProps = {
+            selected : start_date.toDate(),
             dateFormat : 'YYYY-MM-DD',
-            onChange : (x,v) => {
+            onChange : (x : Date | null,ev : any) => {
                 if (x)
-                    this.start_date = x;
-            }
+                    this.start_date = moment(x);
+            },
+            icon : ''
         };
 
         let to_array = (x : any) : string[] => {

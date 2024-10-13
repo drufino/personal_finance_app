@@ -1,4 +1,5 @@
-import { observable, computed, createTransformer, autorun, IObservableArray, ObservableMap } from 'mobx';
+import { observable, computed, autorun, IObservableArray, ObservableMap } from 'mobx';
+import { createTransformer } from 'mobx-utils';
 import { QIFTransactionDetails, DateFormat } from './QIF';
 import { SerializedDataInfo, SerializedData, AccountSerializedData, serialize } from './AccountSerializedData';
 import * as QIF from './QIF';
@@ -33,7 +34,7 @@ type CategoryOverride = [{date : string,who:string, amount:number}, string];
 export type AccountData = 
 {
     uploaded_data   : RawData[],
-    readonly category_filter : ObservableMap<string>;
+    readonly category_filter : ObservableMap<string, string>;
     readonly category_override : IObservableArray<CategoryOverride>;
     initial_balance : number;
     account_type    : AccountType;
@@ -42,19 +43,24 @@ export type AccountData =
 type AccountInfo =
 {
     readonly name            : string;
-    readonly category_filter : ObservableMap<string>;
+    readonly category_filter : ObservableMap<string, string>;
     readonly initial_balance : number;
     readonly account_type    : AccountType;
 }
 
-
+function mymap(list : IterableIterator<string>, fn : any)
+{
+    for (let x in list) {
+        fn(x);
+    }
+}
 export type Transactions = Transaction[];
 
 function remove_whitespace(s : string) : string
 {
     return s.replace(/\s{2,}/g, ' ');
 }
-export function get_category(x : QIFTransactionDetails, category_filter : ObservableMap<string>, category_override : CategoryOverride[]) : string | null
+export function get_category(x : QIFTransactionDetails, category_filter : ObservableMap<string, string>, category_override : CategoryOverride[]) : string | null
 {
     let category : string | null = null;
 
@@ -106,7 +112,7 @@ export function date_range(x : RawData) : [Date|string,Date|string] | null {
 
 export class AccountDataStore
 {
-    private readonly raw_account_data = observable.map<AccountData>();
+    private readonly raw_account_data = observable.map<string, AccountData>();
     private readonly _summary_view = observable.object<SummaryView>(
         { excluded_categories:[], income_categories:[], cash_only : false } );
 
@@ -148,7 +154,7 @@ export class AccountDataStore
     }
 
     @computed get account_names() {
-        return this.raw_account_data.keys();
+        return Array.from(this.raw_account_data.keys());
     }
 
     @computed get income_categories() : [string[], string[]] {
@@ -223,7 +229,7 @@ export class AccountDataStore
 
         let account_data = this.raw_account_data.get(account_name);
         if (account_data) {
-            account_data.category_filter.values().map(update);
+            Array.from(account_data.category_filter.values()).map(update);
             account_data.category_override.map((x) => update(x[1]));
         }
         res.sort((x,y) => x.localeCompare(y));
@@ -241,7 +247,7 @@ export class AccountDataStore
         }
 
         this.raw_account_data.forEach((account_data,k) => {
-            account_data.category_filter.values().map(update);
+            Array.from(account_data.category_filter.values()).map(update);
             account_data.category_override.map((x) => update(x[1]));
         });
 
@@ -315,7 +321,7 @@ export class AccountDataStore
         console.log('Calling get_all_transactions');
         let total : Transactions = [];
 
-        this.raw_account_data.keys().map((account_name) => {
+        Array.from(this.raw_account_data.keys()).map((account_name) => {
             let account_info = this.get_account_info(account_name);
             if (!account_info || (account_info.account_type == 'Credit' && args.cash_only))
             {
@@ -334,7 +340,7 @@ export class AccountDataStore
         console.log('Calling all_transactions');
         let total : Transactions = [];
 
-        this.raw_account_data.keys().map((account_name) => {
+        Array.from(this.raw_account_data.keys()).map((account_name) => {
             let these_transactions = this.extract_account_transactions_(this.raw_account_data, account_name);
             these_transactions.map((x) => { total.push(x); });
         });
@@ -391,7 +397,7 @@ export class AccountDataStore
         let account = this.getRawData(account_name);
         if (account)
         {
-            var matched_transaction = undefined;
+            var matched_transaction : any = undefined;
             for (var i = 0; i < account.uploaded_data.length && !matched_transaction; ++i)
             {
                 let data = account.uploaded_data[i];
@@ -448,7 +454,7 @@ export class AccountDataStore
             }
         }
     }
-    private extract_account_transactions_(data : ObservableMap<AccountData>, account_name : string) : Transactions
+    private extract_account_transactions_(data : ObservableMap<string, AccountData>, account_name : string) : Transactions
     {
         console.log('Calling extract_account_transactions');
         let account_data_ = data.get(account_name);
@@ -516,7 +522,7 @@ export class AccountDataStore
         this.raw_account_data.clear();
         Object.keys(accountSerialized).map((account_name) => {
             let account_data = accountSerialized[account_name];
-            let category_filter = observable.map<string>();
+            let category_filter = observable.map<string, string>();
             let category_override = observable.array<CategoryOverride>();
             let account_type : AccountType = 'Cash';
 
@@ -601,7 +607,7 @@ export class AccountDataStore
             } else { 
                 this.raw_account_data.set(account_name,{
                     uploaded_data : [uploaded_data],
-                    category_filter : observable.map<string>(),
+                    category_filter : observable.map<string, string>(),
                     category_override : observable([]),
                     initial_balance : 0,
                     account_type : 'Cash'
@@ -623,7 +629,7 @@ export class AccountDataStore
         {
             this.raw_account_data.set(account, {
                 uploaded_data : [],
-                category_filter : observable.map<string>(),
+                category_filter : observable.map<string,string>(),
                 category_override : observable([]),
                 initial_balance : 0,
                 account_type : 'Cash'

@@ -9,7 +9,7 @@ import { QIFTransactionDetails } from './QIF';
 let TH = Table.HeaderCell;
 let TD = Table.Cell;
 
-const center_align = { textAlign : 'center'};
+const center_align = {};// TextAlign : 'center'};
 
 type QIFTransactionTableProps = {
     data : QIFTransactionDetails[],
@@ -20,7 +20,7 @@ type QIFTransactionTableProps = {
 @observer
 export class QIFTransactionsTable extends React.Component<QIFTransactionTableProps>
 {
-    @observable selected : boolean[] | undefined = undefined;
+    @observable accessor selected : boolean[] | undefined = undefined;
 
     constructor(props:QIFTransactionTableProps)
     {

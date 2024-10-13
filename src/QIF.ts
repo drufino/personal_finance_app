@@ -6,8 +6,10 @@ export interface QIFTransactionDetails {
     number? : string
 };
 
-export type DateFormat = 'Unknown' | 'MM-DD-YY' | 'DD-MM-YY' | 'DD/MM/YYYY';
-export var DateFormats : DateFormat[] = ['Unknown', 'MM-DD-YY', 'DD-MM-YY', 'DD/MM/YYYY'];
+import { splitEasy } from "csv-split-easy";
+
+export type DateFormat = 'Unknown' | 'MM-DD-YY' | 'DD-MM-YY' | 'DD/MM/YYYY' | 'MM/DD/YYYY';
+export var DateFormats : DateFormat[] = ['Unknown', 'MM-DD-YY', 'DD-MM-YY', 'MM/DD/YYYY', 'DD/MM/YYYY' ];
 export var month_names_short=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export function to_string(date : Date, date_format : DateFormat) : string
@@ -32,6 +34,10 @@ export function to_string(date : Date, date_format : DateFormat) : string
     else if (date_format == 'DD/MM/YYYY')
     {
         return toString(day) + '/' + toString(month) + '/' + toString(year);
+    }
+    else if (date_format == 'MM/DD/YYYY')
+    {
+        return toString(month) + '/' + toString(day) + '/' + toString(year);
     }
     else
     {
@@ -81,6 +87,17 @@ function normalize_date_helper(date : string, date_format : DateFormat) : Date |
             }
             month = parseInt(dateString[1]);
             day = parseInt(dateString[0]);
+            year = parseInt(dateString[2]);
+        }
+        else if (date_format == 'MM/DD/YYYY')
+        {
+            var dateString = date.split('/');
+            if (dateString.length != 3)
+            {
+                return null;
+            }
+            month = parseInt(dateString[0]);
+            day = parseInt(dateString[1]);
             year = parseInt(dateString[2]);
         }
         else
@@ -143,6 +160,42 @@ function is_currency(c : string)
         return false;
     }
 }
+
+export function parse_csv(csv_text : string) : QIFTransactionDetails[] | string | null
+{
+    var lines = splitEasy(csv_text)
+    var amount_idx = lines[0].findIndex((x : string) => x.toLowerCase() == 'amount');
+    if (amount_idx == -1) { 
+        amount_idx = 2;
+    }
+
+    var total_details : QIFTransactionDetails[] = [];
+    var transaction_number = 1;
+    var line_number = 1;
+    try {
+        for (; line_number < lines.length; ++line_number)
+        {
+            var details : Partial<QIFTransactionDetails> = {address : []};
+            let line = lines[line_number];
+            details.date = line[0];
+            details.who = line[1];
+            let amount = line[amount_idx].replace(',','');
+            details.amount = parseFloat(amount);
+            total_details.push({
+                date:details.date,
+                amount:details.amount,
+                who:details.who,
+                address:[''],
+                number:details.number
+            });
+        }
+    } catch (e) {
+        return `Error on line number ${line_number}: ${e}`;
+    }
+
+    return total_details;
+}
+
 export function parse(qif_text : string) : QIFTransactionDetails[] | string | null
 {
     var lines = qif_text.split('\n');

@@ -18,10 +18,20 @@ import { RawTransactionsView } from './RawTransactionsView';
 let TH = Table.HeaderCell;
 let TD = Table.Cell;
 
+import { configure } from "mobx"
+
+configure({
+    enforceActions: "never",
+    computedRequiresReaction: false,
+    reactionRequiresObservable: false,
+    observableRequiresReaction: false,
+    disableErrorBoundaries: false
+})
+
 @observer
 class CreateAccount extends React.Component<{open:boolean, onClose:(_:boolean,account_name:string) => void},{}>
 {
-    @observable account_name : string = '';
+    @observable accessor account_name : string = '';
     ref : any = null;
 
     componentDidMount() {
@@ -60,7 +70,7 @@ type TransactionsViewProps =
 @observer
 class TransactionsView extends React.Component<TransactionsViewProps,{}>
 {
-    @observable open : boolean[] = [];
+    @observable accessor open : boolean[] = [];
 
     constructor(props : TransactionsViewProps)
     {
@@ -163,9 +173,9 @@ class TransactionsView extends React.Component<TransactionsViewProps,{}>
 @observer
 class CategoryView extends React.Component<{account_name : string}, {}>
 {
-    @observable account_name = '';
-    @observable current_search_string : string = '';
-    @observable current_category : string = '';
+    @observable accessor account_name = '';
+    @observable accessor current_search_string : string = '';
+    @observable accessor current_category : string = '';
 
     constructor(props : {account_name : string})
     {
@@ -212,7 +222,7 @@ class CategoryView extends React.Component<{account_name : string}, {}>
                     <thead><tr><th></th><th>Search String</th><th>Category</th></tr></thead>
                     <tbody>
                         {
-                            this_category_filter.entries().map((x,i) => {
+                            Array.from(this_category_filter).map((x,i) => {
                                 return <tr key={i}>
                                     <td><Icon onClick={() => {this_category_filter.delete(x[0])} } name='remove'/></td>
                                     <td>{x[0]}</td>
@@ -244,8 +254,8 @@ interface AppContentProps {account_name:string, delete_account : () => void, upl
 @observer
 class AppContent extends React.Component<AppContentProps,{}>
 {
-    @observable account_name = '';
-    @observable current_balance : string | null = '';
+    @observable accessor account_name = '';
+    @observable accessor current_balance : string | null = '';
 
     constructor(props : AppContentProps)
     {
@@ -397,12 +407,12 @@ class AppContent extends React.Component<AppContentProps,{}>
 @observer
 export default class App extends React.Component<{},{}>
 {
-    @observable content_type : 'None'|'Cashflow'|'Account' = 'None';
-    @observable see_accounts : boolean = true;
-    @observable create_modal : boolean = false;
-    @observable upload_modal : boolean = false;
-    @observable import_modal : boolean = false;
-    @observable active_account : string = '';
+    @observable accessor content_type : 'None'|'Cashflow'|'Account' = 'None';
+    @observable accessor see_accounts : boolean = true;
+    @observable accessor create_modal : boolean = false;
+    @observable accessor upload_modal : boolean = false;
+    @observable accessor import_modal : boolean = false;
+    @observable accessor active_account : string = '';
 
     constructor(props : {})
     {
@@ -461,8 +471,8 @@ export default class App extends React.Component<{},{}>
     onDownload = () => {
         let save = function(filename : string, data : any) {
             var blob = new Blob([data], {type: 'text/json'});
-            if(window.navigator.msSaveOrOpenBlob) {
-                window.navigator.msSaveBlob(blob, filename);
+            if((window.navigator as any).msSaveOrOpenBlob) {
+                (window.navigator as any).msSaveBlob(blob, filename);
             }
             else{
                 var elem = window.document.createElement('a');
@@ -478,7 +488,7 @@ export default class App extends React.Component<{},{}>
 
     render()
     {
-        var content = null;
+        var content : any = null;
 
         if (this.content_type == 'Cashflow')
         {
@@ -496,6 +506,8 @@ export default class App extends React.Component<{},{}>
         {
             content = <div style={{overflowY : 'auto', overflowX : 'hidden', marginLeft: '210px'}}>{content}</div>
         }
+        let account_names = Array.from(account_store.account_names)
+        console.log('Number of account: %d %d', account_names.length, this.see_accounts ? 1 : 0);
         return (
             <div>
 
@@ -504,7 +516,7 @@ export default class App extends React.Component<{},{}>
                         Accounts {this.see_accounts ? (<Icon  name='caret down'/>) : <Icon  name='caret left'/>}
                     </Menu.Item>
                     {(this.see_accounts) ? (
-                        account_store.account_names.map((account,i) => {
+                        account_names.map((account,i) => {
                             return <Menu.Item key={i+1} position='right' onClick={() => {this.active_account = account;this.content_type='Account';}}><span style={{paddingLeft:'25px'}}>{account}</span></Menu.Item>
                         })
                         ) : null

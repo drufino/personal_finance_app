@@ -1,13 +1,16 @@
 {
     "compilerOptions" : {
-        "target" : "es5",
+        "target" : "es2019",
+        "downlevelIteration":true,
         "sourceMap" : true,
+        "noImplicitAny":false,
         "jsx" :"react",
         "strict": true,
         "strictNullChecks" : true,
         "types" : [ "node" ],
-        "lib" : ["es5", "es2015.core", "dom"],
-        "experimentalDecorators" : true
+        "lib" : ["es5", "es2015.core", "dom","es2020", "es2021"],
+	    "moduleResolution":"node",
+        "experimentalDecorators" : false
     },
     "include" : [
         "src/**/*",

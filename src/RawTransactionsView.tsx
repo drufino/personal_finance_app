@@ -14,19 +14,21 @@ let TD = Table.Cell;
 @observer
 export class RawTransactionsView extends React.Component<{account_name:string},{}>
 {
-    @observable active_transactions : number | null = 0;
+    @observable accessor active_transactions : number | null = 0;
+    account_name : string = '';
 
     componentWillReceiveProps(newProps : { account_name : string})
     {
         if (newProps.account_name != this.props.account_name)
             this.active_transactions = 0;
+        this.account_name = newProps.account_name;
     }
 
     deleteRawTransactions(i : number) {
         return () => {
             if (confirm('Are you sure you want to delete this raw data?'))
             {
-                account_store.removeRawAccountData(this.props.account_name, i);
+                account_store.removeRawAccountData(this.account_name, i);
                 if (this.active_transactions != null && this.active_transactions >= i)
                 {
                     if (this.active_transactions == 0)
@@ -43,9 +45,9 @@ export class RawTransactionsView extends React.Component<{account_name:string},{
     }
     options = QIF.DateFormats.map((x:string) => {return {'key':x,'text':x,'value':x}});
 
-    @computed get sorted_data()
+    get_sorted_data()
     {
-        let data = account_store.getRawData(this.props.account_name);
+        let data = account_store.getRawData(this.account_name);
         if (data)
         {
             if (data.uploaded_data.length == 0)
@@ -61,7 +63,7 @@ export class RawTransactionsView extends React.Component<{account_name:string},{
 
     public render()
     {
-        const data = this.sorted_data;
+        const data = this.get_sorted_data();
 
         if (data)
         {
@@ -80,9 +82,9 @@ export class RawTransactionsView extends React.Component<{account_name:string},{
 
             const this_data = ((this.active_transactions != null)) ? sorted_data[this.active_transactions] : null;
 
-            let transactions = null;
+            var transactions : any | null = null;
 
-            if (this_data)
+            if (this_data)  
             {
                 let date_format = this_data.date_format;
                 transactions=(

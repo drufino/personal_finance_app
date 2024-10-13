@@ -4,21 +4,16 @@ module.exports = {
     ],
     devtool: 'source-map',
     module: {
-        loaders: [
-        {
-            test: /\.jsx?$/,
-            exclude: /node_modules/,
-            loader: 'babel-loader'
-        },
+        rules: [
         {
             test: /\.tsx?$/,
             exclude: /node_modules/,
             loader: 'ts-loader'
         },
-        {
-            test: /\.css$/,
-            loader: 'style-loader!css-loader'
-        }
+	{
+	    test: /\.css$/,
+            use:['style-loader','css-loader'],
+  	}
         ]
     },
     resolve: {
@@ -30,12 +25,7 @@ module.exports = {
         filename: 'bundle.js'
     },
     devServer : {
-        contentBase : './public',
-        hot : true,
-        proxy : {
-            '/rpc' : {
-                target : '127.0.0.1:8081'
-            }
-        }
+        static : './public',
+        hot : true
     }
 }
