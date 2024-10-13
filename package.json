@@ -6,7 +6,7 @@
   "scripts": {
     "start": "./node_modules/.bin/webpack-dev-server --mode development --progress  --hot --config ./webpack.config.js",
     "start.server": "./node_modules/.bin/nodemon server/main.ts",
-    "dist": "./node_modules/.bin/webpack -p --progress --config-name client --config ./webpack.config.prod.js && cp public/index.html dist/public/",
+    "dist": "./node_modules/.bin/webpack --mode production --progress --config-name client --config ./webpack.config.prod.js && cp public/index.html dist/public/",
     "start.prod": "npm run dist && cd dist && node server/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dist.clean": "rm -rf dist/public/* dist/server/*"
